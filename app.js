@@ -17,8 +17,8 @@ const createUnixSocketPool = async () => {
     const dbSocketPath = process.env.DB_SOCKET_PATH || '/cloudsql';
   
     return mysql.createPool({
-      user: process.env.USER,
-      password: process.env.PASSWORD,
+      user: process.env.SQL_USER,
+      password: process.env.SQL_PASSWORD,
       database: process.env.DATABASE,
       socketPath: `${dbSocketPath}/${process.env.SQL_INSTANCE}`,
     });
