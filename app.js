@@ -1,16 +1,12 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const mysql = require('mysql');
+const cors = require('cors');
 
 const app = express();
-app.use(bodyParser.urlencoded({extended: true}));
 
-app.use(function(req, res, next) {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-    next();
-});
+app.use(cors());
+app.use(bodyParser.json());
 
 
 const createUnixSocketPool = async () => {
@@ -40,7 +36,7 @@ app.get("/", (req, res) => {
 app.post("/login", (req, res) => {
 
     console.log("Received Request");
-
+    
     try {
         pool.getConnection((err, connection) => {
 
@@ -65,13 +61,15 @@ app.post("/login", (req, res) => {
                     if (err) {
                         console.log("Error");
                         res.status(422).send(`${err} UH OH`);
-                    } else {
+                    } else if (rows.length > 0) {
                         res.send(JSON.stringify({
                             firstName: rows[0].first_name,
                             middleName: rows[0].middle_name,
                             lastName: rows[0].last_name,
                             branchName: rows[0].branch_name
                         }));
+                    } else {
+                        res.status(422).send("Invalid Email or Password");
                     }
                 });
     
