@@ -60,7 +60,7 @@ app.post("/login", (req, res) => {
         
                     if (err) {
                         console.log("Error");
-                        res.status(422).send(`${err} UH OH`);
+                        res.status(500).send(`${err} UH OH`);
                     } else if (rows.length > 0) {
                         res.send(JSON.stringify({
                             firstName: rows[0].first_name,
@@ -84,6 +84,51 @@ app.post("/login", (req, res) => {
 
 app.post("/signup", (req, res) => {
     res.send("In development");
+
+    const email = req.body.email;
+    const password = req.body.password;
+    const confirmPassword = req.body.confirmPassword;
+
+    if (confirmPassword !== password) {
+        return res.status(400).send("Password and Confirmation Password do not match.");
+    }
+
+    try {
+        pool.getConnection((err, connection) => {
+
+            connection.query(
+            `
+                SELECT * FROM user
+                WHERE email = '${email}';
+            `,
+            (err, rows, fields) => {
+                if (err) {
+                    res.status(500).send(`UH OH. Error has occurred: ${err}`);
+                } else if (rows.length > 0) {
+                    res.status(422).send("This email has already been registered!");
+                } else {
+                    connection.query(
+                        `
+                            INSERT INTO user(email, password)
+                            VALUES(${email}, ${password});
+                        `,
+                        (err, rows, fields) => {
+
+                            if (err) {
+                                res.status(500).send(`UH OH error has occurred: ${err}`);
+                            } else {
+                               res.send("Successfully registered user!"); 
+                            }
+                        }
+                    );
+                }
+            });
+
+        });
+    } catch (e) {
+
+        res.send(500).send(`UH OH error has occurred ${e}`);
+    }
 });
 
 
