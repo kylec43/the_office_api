@@ -47,9 +47,9 @@ app.post("/login", (req, res) => {
             } else {
     
                 connection.query(`
-                SELECT employee.first_name, employee.middle_name, employee.last_name, branch.name AS branch_name
+                SELECT user.employee_id, employee.first_name, employee.middle_name, employee.last_name, branch.name AS branch_name
                 FROM user
-                JOIN employee
+                LEFT JOIN employee
                 ON user.employee_id = employee.uid
                 LEFT JOIN branch
                 ON employee.branch_id = branch.uid
@@ -83,7 +83,6 @@ app.post("/login", (req, res) => {
 
 
 app.post("/signup", (req, res) => {
-    res.send("In development");
 
     const email = req.body.email;
     const password = req.body.password;
@@ -96,6 +95,10 @@ app.post("/signup", (req, res) => {
     try {
         pool.getConnection((err, connection) => {
 
+            if (err) {
+                return res.status(500).send(`UH OH. Error has occurred 1: ${err}`);
+            }
+
             connection.query(
             `
                 SELECT * FROM user
@@ -103,21 +106,21 @@ app.post("/signup", (req, res) => {
             `,
             (err, rows, fields) => {
                 if (err) {
-                    res.status(500).send(`UH OH. Error has occurred: ${err}`);
+                    return res.status(500).send(`UH OH. Error has occurred 2: ${err}`);
                 } else if (rows.length > 0) {
-                    res.status(422).send("This email has already been registered!");
+                    return res.status(422).send("This email has already been registered!");
                 } else {
                     connection.query(
                         `
                             INSERT INTO user(email, password)
-                            VALUES(${email}, ${password});
+                            VALUES('${email}', '${password}');
                         `,
                         (err, rows, fields) => {
 
                             if (err) {
-                                res.status(500).send(`UH OH error has occurred: ${err}`);
+                                return res.status(500).send(`UH OH error has occurred 3: ${err}`);
                             } else {
-                               res.send("Successfully registered user!"); 
+                               return res.send("Successfully registered user!"); 
                             }
                         }
                     );
@@ -126,8 +129,7 @@ app.post("/signup", (req, res) => {
 
         });
     } catch (e) {
-
-        res.send(500).send(`UH OH error has occurred ${e}`);
+        return res.send(500).send(`UH OH error has occurred 4: ${e}`);
     }
 });
 
